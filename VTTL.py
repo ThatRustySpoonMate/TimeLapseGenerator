@@ -42,7 +42,11 @@ def FrameCapture(path, skip_n_frames, outfile):
             if(hardware_mode == 0):
                 frames.append(image)
             else:
-                cv2.imwrite(f"{outfile}frame_{kept_frame_count}.jpg", image)
+                if path.isdir(temp_dir):
+                    cv2.imwrite(f"{outfile}frame_{kept_frame_count}.jpg", image)
+                else:
+                    print("Temp directory does not exist, either create it as 'temp', or change to RAM buffered mode.")
+                
             kept_frame_count +=1
 
             # Progress bar stuff
@@ -59,13 +63,9 @@ def FrameCapture(path, skip_n_frames, outfile):
 if __name__ == '__main__':
     
     if path.exists(source_file):
-        if path.isdir(temp_dir):
             FrameCapture(source_file, skip_n_frames = skip_n_frames, outfile = temp_dir)
-        else:
-            print("Directory does not exists")
-            quit()
     else:
-        print("File does not exist")
+        print("Source file does not exist")
         quit()
 
     
