@@ -4,7 +4,6 @@ import os
 from os import path
 from time_lapse import output, source
 
-"""Ram-based store and loading (For better performance applications)"""
 print("CONVERTING.")
 print("Step 1: |", end='')
 
