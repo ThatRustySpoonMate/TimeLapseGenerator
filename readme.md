@@ -7,7 +7,7 @@
     <li>Open the script directory in a command prompt/PowerShell window.</li>
     <li>Run the script and pass it relevant parameters as so:</li>
     <p style="margin-left: 40px;"> > <em>Python VTTL src_path.mp4 ram_hdd_mode frame_rate speed_multiplier* </em></p>
-    <p style="margin-left: 40px;">src_path.mp4 <strong>str</strong>: <em>determines the  is the relative or absolute path to the mp4 source file</em></p>
+    <p style="margin-left: 40px;">src_path.mp4 <strong>str</strong>: <em>determines the relative or absolute path to the mp4 source file</em></p>
     <p style="margin-left: 40px;">ram_hdd_mode <strong>int</strong>: <em>determines if the video conversion will buffer frames in ram or the filesystem (0 = RAM, 1 = HDD)</em> </p>
     <p style="margin-left: 40px;">frame_rate <strong>int</strong>: <em>determines the output file frame rate</em> </p>
     <p style="margin-left: 40px;">speed_multiplier <strong>float</strong>: <em>takes into account the source frame rate, output desired frame rate, number of frames in the source video and will speed the video up by this amount.</em> </p>
