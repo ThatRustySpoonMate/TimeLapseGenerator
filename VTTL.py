@@ -1,7 +1,6 @@
 import cv2
 import argparse
 import os
-from os import path
 from time_lapse import output, source
 
 print("CONVERTING.")
@@ -12,7 +11,7 @@ print("Step 1: |", end='')
 source_file = "./source.mp4" # Input video file
 dest_vid_name = "./destination.mp4" # Output video file
 speed_multiplier = 1 # TODO: Implement -- Overall multiplier of source video speed to output video speed
-hardware_mode = 1 # 0: RAM, 1: HDD
+hardware_mode = 0 # 0: RAM, 1: HDD
 out_frame_rate = 25 # Output frame rate
 temp_dir = "./temp/" # Directory to store frames in HDD mode
 skip_n_frames = 20 # Keep every n frame from the source video
@@ -42,10 +41,11 @@ def FrameCapture(path, skip_n_frames, outfile):
             if(hardware_mode == 0):
                 frames.append(image)
             else:
-                if path.isdir(temp_dir):
+                if os.path.isdir(temp_dir):
                     cv2.imwrite(f"{outfile}frame_{kept_frame_count}.jpg", image)
                 else:
-                    print("Temp directory does not exist, either create it as 'temp', or change to RAM buffered mode.")
+                    print("\nTemp directory does not exist, either create it as 'temp', or re-run program in RAM buffered mode.")
+                    quit()
                 
             kept_frame_count +=1
 
@@ -62,7 +62,7 @@ def FrameCapture(path, skip_n_frames, outfile):
 
 if __name__ == '__main__':
     
-    if path.exists(source_file):
+    if os.path.exists(source_file):
             FrameCapture(source_file, skip_n_frames = skip_n_frames, outfile = temp_dir)
     else:
         print("Source file does not exist")
