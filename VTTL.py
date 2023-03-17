@@ -4,20 +4,18 @@ import os
 import time
 #from time_lapse import output, source # Unused
 
-print("CONVERTING.")
-print("Step 1: |", end="")
-
 # Config
 # TODO: Add Arg Parser for (src_file, dst_file, ram/hdd mode, frame_rate, speed_multiplier)
 # TODO: Maybe add support for checking expected ram usage given parameters. (Ask to confirm if still go ahead in RAM mode, otherwise, switch to HDD Mode)
 source_file_path = "./source.mp4"  # Input video file
 dest_vid_name = "./destination.mp4"  # Output video file
-speed_multiplier = 20  # Overall multiplier of source video speed to output video speed
+speed_multiplier = 16  # Overall multiplier of source video speed to output video speed
 hardware_mode = 0  # 0: Direct, 1: RAM, 2: HDD
-out_frame_rate = 30  # Desired output frame rate
+src_frame_rate = 60 # TODO: Get Source video frame rate
+out_frame_rate = 30  # Desired video output frame rate
 temp_dir = "./temp/"  # Directory to store frames in HDD mode
 skip_n_frames = 1  # Keep every n frame from the source video
-src_frame_rate = 60 # TODO: Get Source video frame rate
+
 
 kept_frame_count = 0
 frames = []
@@ -30,9 +28,9 @@ def extract_frames_from_source(src_path, skip_n_frames, mode = 1): # mode 1: RAM
     step_1_progress = 0
 
     vidObj = cv2.VideoCapture(src_path)
-    count = 0
-    kept_frame_count = 1
-    success = 1
+    count = 0 # Position through source video
+    kept_frame_count = 1 # Gets incremented every time we keep a frame (Either by storing it in ram or storage)
+    success = 1 # Flag if reading next frame was successful
     total_frames = int(vidObj.get(cv2.CAP_PROP_FRAME_COUNT))
 
     target_frames = total_frames / skip_n_frames
@@ -51,7 +49,6 @@ def extract_frames_from_source(src_path, skip_n_frames, mode = 1): # mode 1: RAM
             elif(mode == 2):
                 if os.path.isdir(temp_dir):
                     cv2.imwrite(f"{temp_dir}frame_{kept_frame_count}.jpg", image)
-                    frames.append(f"{temp_dir}frame_{kept_frame_count}.jpg")
                 else:
                     print(
                         "\nTemp directory does not exist, either create it as 'temp', or re-run program in RAM buffered mode."
@@ -72,10 +69,16 @@ if __name__ == "__main__":
     if not os.path.exists(source_file_path):
         print("Unable to open '{}'\nPlease check the path and try again.".format(source_file_path))
         quit()
+    print("Conversion begun in {} mode.".format("direct access" if hardware_mode == 0 else "RAM buffered" if hardware_mode == 1 else "HDD buffered"))
+    print("Step 1: |", end="")
 
     start_time_1 = time.time() # Start timer
     step_1_duration = 0
-    skip_n_frames = int(speed_multiplier * (src_frame_rate / out_frame_rate) )
+
+    if(out_frame_rate < src_frame_rate):
+        skip_n_frames = int(speed_multiplier * (src_frame_rate / out_frame_rate) )
+    else:
+        skip_n_frames = 1
 
     if hardware_mode == 0:
         # Direct mode -- Setup for step 2
@@ -101,7 +104,7 @@ if __name__ == "__main__":
         print("|\nCompleted in {:.2f} seconds".format(step_1_duration))
         print(f"Created {kept_frame_count} images")
     else:
-        print("Not Required|")
+        print("N o t  R e q u i r e d|")
 
 
     # Step 2: Reconstruct frames into video
@@ -121,20 +124,23 @@ if __name__ == "__main__":
 
     if hardware_mode == 0:
         # Direct mode
-        divisor = 1/target_frames * 100
+        vidObj.set(cv2.CAP_PROP_POS_FRAMES, 0) # Set to start of video
+        divisor = 1/total_frames * 100
 
         while success:
             success, image = vidObj.read()
 
-            if count % skip_n_frames == 0:
-                out_video.write(image)
-                img_count = img_count + 1
+            count = count + skip_n_frames
+            vidObj.set(cv2.CAP_PROP_POS_FRAMES, count) #S kip forward to the next frame we are interested in
+            #print(int(vidObj.get(cv2.CAP_PROP_POS_FRAMES)))
+
+            out_video.write(image)
                       
-                if (img_count * divisor) - step_2_progress > 5:
-                    step_2_progress = step_2_progress + 5
-                    print("o", end="")
+            if (count * divisor) - step_2_progress > 5:
+                step_2_progress = step_2_progress + 5
+                print("o", end="")
             
-            count = count + 1
+            #count = count + 1
 
 
     elif hardware_mode == 1:
@@ -150,7 +156,7 @@ if __name__ == "__main__":
 
     elif hardware_mode == 2:
         # HDD Buffered mode
-        #frames = [img for img in os.listdir(temp_dir) if img.endswith(".jpg")] # This is not needed as frames is already populated
+        frames = [img for img in os.listdir(temp_dir) if img.endswith(".jpg")]
         divisor = 1/kept_frame_count * 100 # Speed up division process
          
         for image in frames:
