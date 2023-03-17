@@ -1,7 +1,7 @@
 import cv2
 import argparse
 import os
-from time_lapse import output, source
+#from time_lapse import output, source # Unused
 
 print("CONVERTING.")
 print("Step 1: |", end="")
@@ -12,7 +12,7 @@ print("Step 1: |", end="")
 source_file_path = "./source.mp4"  # Input video file
 dest_vid_name = "./destination.mp4"  # Output video file
 speed_multiplier = 20  # Overall multiplier of source video speed to output video speed
-hardware_mode = 1  # 0: Direct, 1: RAM, 2: HDD
+hardware_mode = 0  # 0: Direct, 1: RAM, 2: HDD
 out_frame_rate = 25  # Desired output frame rate
 temp_dir = "./temp/"  # Directory to store frames in HDD mode
 skip_n_frames = 1  # Keep every n frame from the source video
@@ -72,20 +72,18 @@ if __name__ == "__main__":
         print("Unable to open '{}'\nPlease check the path and try again.".format(source_file_path))
         quit()
 
-    skip_n_frames = int(speed_multiplier * (out_frame_rate / src_frame_rate) )
+    skip_n_frames = int(speed_multiplier * (src_frame_rate / out_frame_rate) )
 
     if hardware_mode == 0:
-        # Direct mode
+        # Direct mode -- Setup for step 2
         step_1_progress = 0
 
         vidObj = cv2.VideoCapture(source_file_path)
+        total_frames = int(vidObj.get(cv2.CAP_PROP_FRAME_COUNT))
+        target_frames = total_frames / skip_n_frames
 
         count = 0
-        kept_frame_count = 1
         success = 1
-        total_frames = int(vidObj.get(cv2.CAP_PROP_FRAME_COUNT))
-
-        target_frames = total_frames / skip_n_frames
 
         success, image = vidObj.read()
         first_frame = image
@@ -94,9 +92,12 @@ if __name__ == "__main__":
         # RAM or HDD buffered mode
         extract_frames_from_source(source_file_path, skip_n_frames, hardware_mode)
 
-    print("|\nComplete")
+    
     if hardware_mode != 0:
+        print("|\nComplete")
         print(f"Created {kept_frame_count} images")
+    else:
+        print("Not Required")
 
 
     # Step 2: Reconstruct frames into video
@@ -114,18 +115,19 @@ if __name__ == "__main__":
 
     if hardware_mode == 0:
         # Direct mode
-
+        
         while success:
             success, image = vidObj.read()
 
             if count % skip_n_frames == 0:
                 out_video.write(image)
-
-            img_count = img_count + 1
-
-            if (img_count / kept_frame_count * 100) - step_2_progress > 5:
-                step_2_progress = step_2_progress + 5
-                print("o", end="")
+                img_count = img_count + 1
+                      
+                if (img_count / target_frames * 100) - step_2_progress > 5:
+                    step_2_progress = step_2_progress + 5
+                    print("o", end="")
+            
+            count = count + 1
 
 
     elif hardware_mode == 1:
