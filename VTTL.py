@@ -3,8 +3,6 @@ import argparse
 import os
 import time
 
-# from time_lapse import output, source # Unused
-
 
 # TODO: Add Arg Parser for (src_file, dst_file, ram/hdd mode, frame_rate, speed_multiplier)
 # TODO: Maybe add support for checking expected ram usage given parameters. (Ask to confirm if still go ahead in RAM mode, otherwise, switch to HDD Mode)
