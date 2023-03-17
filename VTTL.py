@@ -4,30 +4,34 @@ import os
 import time
 #from time_lapse import output, source # Unused
 
-# Config
+
 # TODO: Add Arg Parser for (src_file, dst_file, ram/hdd mode, frame_rate, speed_multiplier)
 # TODO: Maybe add support for checking expected ram usage given parameters. (Ask to confirm if still go ahead in RAM mode, otherwise, switch to HDD Mode)
+
+# Config
 source_file_path = "./source.mp4"  # Input video file
 dest_vid_name = "./destination.mp4"  # Output video file
 speed_multiplier = 16  # Overall multiplier of source video speed to output video speed
 hardware_mode = 0  # 0: Direct, 1: RAM, 2: HDD
-src_frame_rate = 60 # TODO: Get Source video frame rate
 out_frame_rate = 30  # Desired video output frame rate
+
+# No need to change these values
 temp_dir = "./temp/"  # Directory to store frames in HDD mode
 skip_n_frames = 1  # Keep every n frame from the source video
-
-
+src_frame_rate = 60 # Automatically detected
 kept_frame_count = 0
 frames = []
 first_frame = None
 
 
-# Split video into frames and store them
+# Split video into frames and store them depending on the mode
 def extract_frames_from_source(src_path, skip_n_frames, mode = 1): # mode 1: RAM, mode 2: HDD
-    global kept_frame_count, frames, first_frame
+    global kept_frame_count, frames, first_frame, src_frame_rate
     step_1_progress = 0
 
     vidObj = cv2.VideoCapture(src_path)
+    src_frame_rate = vidObj.get(cv2.CAP_PROP_FPS)
+    print(src_frame_rate)
     count = 0 # Position through source video
     kept_frame_count = 1 # Gets incremented every time we keep a frame (Either by storing it in ram or storage)
     success = 1 # Flag if reading next frame was successful
@@ -66,6 +70,8 @@ def extract_frames_from_source(src_path, skip_n_frames, mode = 1): # mode 1: RAM
 
 if __name__ == "__main__":
 
+
+
     if not os.path.exists(source_file_path):
         print("Unable to open '{}'\nPlease check the path and try again.".format(source_file_path))
         quit()
@@ -86,6 +92,8 @@ if __name__ == "__main__":
 
         vidObj = cv2.VideoCapture(source_file_path)
         total_frames = int(vidObj.get(cv2.CAP_PROP_FRAME_COUNT))
+        src_frame_rate = vidObj.get(cv2.CAP_PROP_FPS)
+        print(src_frame_rate)
         target_frames = total_frames / skip_n_frames
 
         count = 0
@@ -136,7 +144,7 @@ if __name__ == "__main__":
                 if (count * divisor) - step_2_progress > 5:
                     step_2_progress = step_2_progress + 5
                     print("o", end="")
-                    
+
             count = count + 1
             
                     
