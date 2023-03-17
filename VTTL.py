@@ -125,27 +125,27 @@ if __name__ == "__main__":
     if hardware_mode == 0:
         # Direct mode
         vidObj.set(cv2.CAP_PROP_POS_FRAMES, 0) # Set to start of video
-        divisor = 1/total_frames * 100
+        divisor = 1/total_frames * 100 # Speed up division process
 
         while success:
             success, image = vidObj.read()
-
-            count = count + skip_n_frames
-            vidObj.set(cv2.CAP_PROP_POS_FRAMES, count) #S kip forward to the next frame we are interested in
-            #print(int(vidObj.get(cv2.CAP_PROP_POS_FRAMES)))
-
-            out_video.write(image)
-                      
-            if (count * divisor) - step_2_progress > 5:
-                step_2_progress = step_2_progress + 5
-                print("o", end="")
             
-            #count = count + 1
+            if count % skip_n_frames == 0:
+                out_video.write(image)
+                
+                if (count * divisor) - step_2_progress > 5:
+                    step_2_progress = step_2_progress + 5
+                    print("o", end="")
+                    
+            count = count + 1
+            
+                    
 
 
     elif hardware_mode == 1:
         # RAM buffered mode
         divisor = 1/kept_frame_count * 100 # Speed up division process
+
         for image in frames:
             out_video.write(image)
             img_count = img_count + 1
